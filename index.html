@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مولد برنامه بدنسازی (IronArchitect)</title>
+    
+    <!-- 1. Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 2. Html2Canvas for downloading images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- 3. Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- 4. Lalezar Font & Custom Styles -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lalezar&display=swap');
+        
+        body {
+            font-family: 'Lalezar', cursive;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        
+        /* Custom Fade Animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Hide scrollbar for clean UI if needed */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none; /* Hides the slider so that custom slider can be made */
+            width: 100%; /* Specific width is required for Firefox. */
+            background: transparent; /* Otherwise white in Chrome */
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #059669; /* emerald-600 */
+            cursor: pointer;
+            margin-top: -8px; /* You need to specify a margin in Chrome, but in Firefox and IE it is automatic */
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border: 2px solid white;
+        }
+
+        /* Firefox */
+        input[type=range]::-moz-range-thumb {
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #059669;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #e2e8f0; /* slate-200 */
+            border-radius: 8px;
+        }
+        
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: #e2e8f0;
+            border-radius: 8px;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="text-slate-900 min-h-screen pb-10">
+
+    <!-- HEADER -->
+    <header class="bg-slate-900 text-white p-6 shadow-lg sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i data-lucide="dumbbell" class="text-emerald-400 w-8 h-8"></i>
+                <h1 class="text-3xl mt-1 tracking-wide">مربی هوشمند</h1>
+            </div>
+            <p class="text-slate-400 hidden sm:block text-lg mt-1">ساخت برنامه تمرینی حرفه‌ای</p>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-4 sm:p-6">
+        
+        <!-- INPUT SECTION (Visible by default) -->
+        <div id="input-section" class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 fade-in">
+            <div class="mb-8 text-center">
+                <h2 class="text-2xl text-slate-800 mb-2">طراحی برنامه اختصاصی شما</h2>
+                <p class="text-slate-500 text-lg">برای دریافت برنامه تمرینی هایپرتروفی (عضله سازی)، مشخصات زیر را انتخاب کنید.</p>
+            </div>
+
+            <!-- Experience Level -->
+            <div class="mb-6">
+                <h3 class="flex items-center gap-2 text-xl text-slate-800 mb-3">
+                    <i data-lucide="activity" class="text-emerald-600 w-6 h-6 ml-1"></i>
+                    سطح تجربه
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="level-options">
+                    <!-- Buttons injected by JS -->
+                </div>
+            </div>
+
+            <!-- Split Type -->
+            <div class="mb-6">
+                <h3 class="flex items-center gap-2 text-xl text-slate-800 mb-3">
+                    <i data-lucide="calendar" class="text-emerald-600 w-6 h-6 ml-1"></i>
+                    نوع تقسیم تمرین (Split)
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" id="split-options">
+                    <!-- Buttons injected by JS -->
+                </div>
+            </div>
+
+            <!-- NEW: Days Slider -->
+            <div class="mb-6">
+                <div class="flex justify-between items-end mb-4">
+                    <h3 class="flex items-center gap-2 text-xl text-slate-800">
+                        <i data-lucide="clock" class="text-emerald-600 w-6 h-6 ml-1"></i>
+                        تعداد روزهای تمرین در هفته
+                    </h3>
+                    <span id="days-display" class="text-emerald-700 font-bold text-xl bg-emerald-50 px-4 py-1 rounded-xl border border-emerald-200 shadow-sm min-w-[80px] text-center">۴ روز</span>
+                </div>
+                <div class="relative w-full h-12 flex items-center">
+                    <input 
+                        type="range" 
+                        min="2" 
+                        max="6" 
+                        value="4" 
+                        id="days-slider"
+                        class="w-full"
+                        oninput="updateDays(this.value)"
+                    >
+                </div>
+                <div class="flex justify-between text-slate-400 text-sm px-1 font-sans">
+                    <span>کم (2)</span>
+                    <span>زیاد (6)</span>
+                </div>
+            </div>
+
+            <!-- Info Box -->
+            <div class="mb-6 bg-blue-50 text-blue-800 p-4 rounded-xl flex gap-3 items-start border border-blue-100">
+                <i data-lucide="info" class="w-5 h-5 mt-1 shrink-0 ml-2"></i>
+                <div>
+                    <strong class="block mb-2 text-lg">راهنمای انتخاب سیستم تمرینی:</strong>
+                    <ul class="list-disc pr-4 space-y-1 text-base opacity-90">
+                        <li>کل بدن: برای تعداد روزهای کم (۲-۳ روز) پیشنهاد می‌شود.</li>
+                        <li>بالا/پایین تنه: تعادل عالی، مناسب برای ۴ روز.</li>
+                        <li>فشار/کشش/پا (PPL): محبوب‌ترین سیستم برای ۳ یا ۶ روز.</li>
+                        <li>تک عضله‌ای: تمرکز بالا روی هر عضله، مناسب برای ۵ روز.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Equipment -->
+            <div class="mb-6">
+                <h3 class="flex items-center gap-2 text-xl text-slate-800 mb-3">
+                    <i data-lucide="dumbbell" class="text-emerald-600 w-6 h-6 ml-1"></i>
+                    تجهیزات در دسترس
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="equipment-options">
+                     <!-- Buttons injected by JS -->
+                </div>
+            </div>
+
+            <button id="generate-btn" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white text-xl py-4 px-6 rounded-xl shadow-lg transform transition active:scale-95 flex items-center justify-center gap-3">
+                <span id="btn-text">ساخت برنامه تمرینی</span>
+                <i data-lucide="check-circle" id="btn-icon"></i>
+            </button>
+        </div>
+
+        <!-- RESULTS SECTION (Hidden by default) -->
+        <div id="result-section" class="hidden fade-in">
+            
+            <!-- Control Buttons (Not downloaded) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-6 border border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="text-slate-600 text-lg flex items-center">
+                   <span class="text-emerald-600 ml-2 font-bold text-2xl">✓</span>
+                   برنامه شما آماده است!
+                </div>
+                <div class="flex gap-2 w-full sm:w-auto">
+                   <button onclick="resetApp()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-6 rounded-lg text-lg transition-colors border border-slate-300">
+                     <i data-lucide="refresh-cw" class="w-4 h-4 ml-1"></i> ساخت مجدد
+                   </button>
+                   <button id="download-btn" onclick="downloadImage()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-6 rounded-lg text-lg transition-colors shadow-md shadow-emerald-200">
+                     <i data-lucide="download" class="w-4 h-4 ml-1"></i> دانلود تصویر
+                   </button>
+                 </div>
+             </div>
+
+            <!-- Printable Area (This part gets captured) -->
+            <div id="printable-area" class="p-4 sm:p-8 bg-slate-100 rounded-xl min-h-[600px]">
+                <div class="mb-8 border-b-2 border-slate-200 pb-4">
+                    <div class="flex justify-between items-end">
+                      <div>
+                        <h2 class="text-3xl text-emerald-800 mb-2">برنامه اختصاصی شما</h2>
+                        <div class="flex gap-2 text-slate-500 text-lg" id="result-tags">
+                           <!-- Tags injected here -->
+                        </div>
+                      </div>
+                      <div class="opacity-50 hidden sm:block">
+                        <i data-lucide="dumbbell" class="w-16 h-16 text-slate-300"></i>
+                      </div>
+                    </div>
+                </div>
+
+                <!-- Workout Container -->
+                <div id="workout-container" class="space-y-6">
+                    <!-- Cards injected here -->
+                </div>
+
+                <!-- Footer Tips -->
+                <div class="mt-8 bg-slate-800 text-slate-300 p-6 rounded-xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-blue-500"></div>
+                    <h4 class="text-white text-xl mb-3 flex items-center gap-2">
+                      <i data-lucide="info" class="text-emerald-400 w-5 h-5"></i> نکات مربی
+                    </h4>
+                    <ul class="space-y-2 list-disc list-inside text-lg leading-relaxed opacity-90">
+                      <li><strong>افزایش بار تدریجی:</strong> هر هفته سعی کنید یا وزنه را سنگین‌تر کنید یا تکرار بیشتری انجام دهید.</li>
+                      <li><strong>استراحت:</strong> بین حرکات سنگین ۹۰-۱۲۰ ثانیه و حرکات سبک ۶۰-۹۰ ثانیه استراحت کنید.</li>
+                      <li><strong>تغذیه:</strong> برای عضله‌سازی، مصرف پروتئین کافی (۱.۶ تا ۲.۲ گرم به ازای هر کیلوگرم وزن بدن) ضروری است.</li>
+                    </ul>
+                    <div class="mt-4 text-center text-slate-500 text-sm dir-ltr font-sans">
+                       Generated by IronArchitect
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA ---
+        const exerciseDatabase = [
+            // CHEST
+            { id: 'c1', name: 'پرس سینه هالتر', muscle: 'سینه', type: 'چند مفصلی', equipment: ['باشگاه', 'هالتر'], tier: 'S' },
+            { id: 'c2', name: 'پرس بالا سینه دمبل', muscle: 'سینه', type: 'چند مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'A' },
+            { id: 'c3', name: 'قفسه سینه دمبل', muscle: 'سینه', type: 'تک مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'B' },
+            { id: 'c4', name: 'شنا سوئدی', muscle: 'سینه', type: 'چند مفصلی', equipment: ['وزن بدن', 'باشگاه', 'دمبل'], tier: 'A' },
+            { id: 'c5', name: 'کراس اور', muscle: 'سینه', type: 'تک مفصلی', equipment: ['باشگاه'], tier: 'B' },
+            { id: 'c6', name: 'پارالل', muscle: 'سینه', type: 'چند مفصلی', equipment: ['باشگاه', 'وزن بدن'], tier: 'A' },
+            // BACK
+            { id: 'b1', name: 'ددلیفت', muscle: 'زیر بغل', type: 'چند مفصلی', equipment: ['باشگاه', 'هالتر'], tier: 'S' },
+            { id: 'b2', name: 'بارفیکس', muscle: 'زیر بغل', type: 'چند مفصلی', equipment: ['وزن بدن', 'باشگاه'], tier: 'S' },
+            { id: 'b3', name: 'زیربغل خم هالتر', muscle: 'زیر بغل', type: 'چند مفصلی', equipment: ['باشگاه', 'هالتر'], tier: 'A' },
+            { id: 'b4', name: 'زیربغل سیم‌کش', muscle: 'زیر بغل', type: 'چند مفصلی', equipment: ['باشگاه'], tier: 'B' },
+            { id: 'b5', name: 'زیربغل تک دمبل خم', muscle: 'زیر بغل', type: 'چند مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'A' },
+            { id: 'b6', name: 'فیس پول', muscle: 'زیر بغل', type: 'تک مفصلی', equipment: ['باشگاه'], tier: 'B' },
+            // LEGS
+            { id: 'l1', name: 'اسکات پا هالتر', muscle: 'چهارسر ران', type: 'چند مفصلی', equipment: ['باشگاه', 'هالتر'], tier: 'S' },
+            { id: 'l2', name: 'پرس پا', muscle: 'چهارسر ران', type: 'چند مفصلی', equipment: ['باشگاه'], tier: 'A' },
+            { id: 'l3', name: 'اسکات گابلت', muscle: 'چهارسر ران', type: 'چند مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'B' },
+            { id: 'l4', name: 'لانگز (قیچی)', muscle: 'چهارسر ران', type: 'چند مفصلی', equipment: ['باشگاه', 'دمبل', 'وزن بدن'], tier: 'B' },
+            { id: 'l5', name: 'جلو ران دستگاه', muscle: 'چهارسر ران', type: 'تک مفصلی', equipment: ['باشگاه'], tier: 'C' },
+            { id: 'h1', name: 'ددلیفت رومانیایی', muscle: 'پشت ران', type: 'چند مفصلی', equipment: ['باشگاه', 'هالتر', 'دمبل'], tier: 'S' },
+            { id: 'h2', name: 'پشت ران دستگاه', muscle: 'پشت ران', type: 'تک مفصلی', equipment: ['باشگاه'], tier: 'B' },
+            { id: 'h3', name: 'پل باسن', muscle: 'باسن', type: 'چند مفصلی', equipment: ['وزن بدن', 'باشگاه', 'دمبل'], tier: 'A' },
+            { id: 'h4', name: 'اسکات بلغاری', muscle: 'پا', type: 'چند مفصلی', equipment: ['دمبل', 'باشگاه', 'وزن بدن'], tier: 'A' },
+            // SHOULDERS
+            { id: 's1', name: 'پرس سرشانه هالتر', muscle: 'سرشانه', type: 'چند مفصلی', equipment: ['باشگاه', 'هالتر'], tier: 'S' },
+            { id: 's2', name: 'پرس سرشانه دمبل', muscle: 'سرشانه', type: 'چند مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'A' },
+            { id: 's3', name: 'نشر جانب', muscle: 'سرشانه', type: 'تک مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'A' },
+            { id: 's4', name: 'نشر خم دمبل', muscle: 'سرشانه', type: 'تک مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'B' },
+            // ARMS
+            { id: 'bi1', name: 'جلو بازو هالتر ایستاده', muscle: 'جلو بازو', type: 'تک مفصلی', equipment: ['باشگاه', 'هالتر'], tier: 'A' },
+            { id: 'bi2', name: 'جلو بازو دمبل', muscle: 'جلو بازو', type: 'تک مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'A' },
+            { id: 'bi3', name: 'جلو بازو چکشی', muscle: 'جلو بازو', type: 'تک مفصلی', equipment: ['باشگاه', 'دمبل'], tier: 'B' },
+            { id: 'tri1', name: 'پشت بازو هالتر خوابیده', muscle: 'پشت بازو', type: 'تک مفصلی', equipment: ['باشگاه', 'هالتر', 'دمبل'], tier: 'A' },
+            { id: 'tri2', name: 'پشت بازو سیم‌کش', muscle: 'پشت بازو', type: 'تک مفصلی', equipment: ['باشگاه'], tier: 'A' },
+            { id: 'tri3', name: 'پرس سینه دست جمع', muscle: 'پشت بازو', type: 'چند مفصلی', equipment: ['باشگاه', 'هالتر'], tier: 'A' },
+            // ABS
+            { id: 'ab1', name: 'زیرشکم خلبانی', muscle: 'شکم', type: 'تک مفصلی', equipment: ['باشگاه', 'وزن بدن'], tier: 'A' },
+            { id: 'ab2', name: 'پلانک', muscle: 'شکم', type: 'تک مفصلی', equipment: ['وزن بدن', 'باشگاه', 'دمبل'], tier: 'B' },
+            { id: 'ab3', name: 'کرانچ سیم‌کش', muscle: 'شکم', type: 'تک مفصلی', equipment: ['باشگاه'], tier: 'A' }
+        ];
+
+        // --- STATE ---
+        let preferences = {
+            level: 'متوسط',
+            split: 'فشار / کشش / پا',
+            equipmentSelection: 'دسترسی کامل باشگاه',
+            days: 4 // Default days
+        };
+
+        const equipmentMapping = {
+            'دسترسی کامل باشگاه': ['باشگاه', 'هالتر', 'دمبل', 'وزن بدن'],
+            'فقط دمبل': ['دمبل', 'وزن بدن'],
+            'فقط وزن بدن': ['وزن بدن']
+        };
+
+        // --- RENDER INPUTS ---
+        const optionsData = {
+            level: ['مبتدی', 'متوسط', 'پیشرفته'],
+            split: ['کل بدن', 'بالا تنه / پایین تنه', 'فشار / کشش / پا', 'تک عضله‌ای'],
+            equipment: ['دسترسی کامل باشگاه', 'فقط دمبل', 'فقط وزن بدن']
+        };
+
+        function renderOptions(containerId, category, key) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = optionsData[category].map(opt => `
+                <button 
+                    onclick="selectOption('${key}', '${opt}')"
+                    class="p-3 rounded-xl text-lg transition-all duration-200 border-2 ${preferences[key] === opt 
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm' 
+                        : 'border-slate-200 bg-white text-slate-600 hover:border-emerald-200 hover:bg-slate-50'}"
+                >${opt}</button>
+            `).join('');
+        }
+
+        function selectOption(key, value) {
+            preferences[key] = value;
+            renderAllInputs(); 
+        }
+
+        // New function to update days slider
+        function updateDays(val) {
+            const days = parseInt(val);
+            preferences.days = days;
+            document.getElementById('days-display').innerText = days + ' روز';
+        }
+
+        function renderAllInputs() {
+            renderOptions('level-options', 'level', 'level');
+            renderOptions('split-options', 'split', 'split');
+            renderOptions('equipment-options', 'equipment', 'equipmentSelection');
+        }
+
+        // --- GENERATION LOGIC ---
+        document.getElementById('generate-btn').addEventListener('click', () => {
+            const btn = document.getElementById('generate-btn');
+            const btnText = document.getElementById('btn-text');
+            const btnIcon = document.getElementById('btn-icon');
+            
+            // Loading State
+            btnText.textContent = "در حال پردازش...";
+            btn.disabled = true;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            
+            // Simulate processing
+            setTimeout(() => {
+                generateWorkoutPlan();
+                
+                // Switch Views
+                document.getElementById('input-section').classList.add('hidden');
+                document.getElementById('result-section').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                // Reset Button
+                btnText.textContent = "ساخت برنامه تمرینی";
+                btn.disabled = false;
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }, 800);
+        });
+
+        function generateWorkoutPlan() {
+            const equipment = equipmentMapping[preferences.equipmentSelection];
+            const { split, level, days } = preferences;
+            let schedule = [];
+
+            // Helper functions
+            const getEx = (muscle, count, type = null) => {
+                let pool = exerciseDatabase.filter(e => 
+                    (e.muscle === muscle || (muscle === 'پا' && (e.muscle === 'چهارسر ران' || e.muscle === 'پشت ران' || e.muscle === 'باسن'))) &&
+                    e.equipment.some(req => equipment.includes(req))
+                );
+                if (type) pool = pool.filter(e => e.type === type);
+                return pool.sort(() => 0.5 - Math.random()).slice(0, count);
+            };
+
+            // Define Modules based on split (Function to generate exercises for that session)
+            let modules = [];
+
+            if (split === 'کل بدن') {
+                modules = [
+                    () => ({ 
+                        title: 'فول بادی', 
+                        exercises: [
+                            ...getEx('چهارسر ران', 1), ...getEx('پشت ران', 1), ...getEx('سینه', 1),
+                            ...getEx('زیر بغل', 1), ...getEx('سرشانه', 1), ...getEx('شکم', 1)
+                        ]
+                    })
+                ];
+            } else if (split === 'بالا تنه / پایین تنه') {
+                modules = [
+                    () => ({ 
+                        title: 'بالا تنه', 
+                        exercises: [...getEx('سینه', 2), ...getEx('زیر بغل', 2), ...getEx('سرشانه', 1), ...getEx('پشت بازو', 1), ...getEx('جلو بازو', 1)]
+                    }),
+                    () => ({ 
+                        title: 'پایین تنه', 
+                        exercises: [...getEx('چهارسر ران', 2), ...getEx('پشت ران', 2), ...getEx('باسن', 1), ...getEx('شکم', 1)]
+                    })
+                ];
+            } else if (split === 'فشار / کشش / پا') {
+                modules = [
+                    () => ({ 
+                        title: 'فشار (سینه/سرشانه/پشت‌بازو)', 
+                        exercises: [...getEx('سینه', 2), ...getEx('سرشانه', 2), ...getEx('پشت بازو', 2)]
+                    }),
+                    () => ({ 
+                        title: 'کشش (زیربغل/جلوبازو)', 
+                        exercises: [...getEx('زیر بغل', 2), ...getEx('زیر بغل', 1, 'تک مفصلی'), ...getEx('جلو بازو', 2), ...getEx('سرشانه', 1)]
+                    }),
+                    () => ({ 
+                        title: 'پا (ران/باسن)', 
+                        exercises: [...getEx('چهارسر ران', 2), ...getEx('پشت ران', 2), ...getEx('باسن', 1), ...getEx('شکم', 1)]
+                    })
+                ];
+            } else { // Bro Split (5 parts)
+                modules = [
+                    () => ({ title: 'عضلات سینه', exercises: getEx('سینه', 4) }),
+                    () => ({ title: 'عضلات زیربغل', exercises: getEx('زیر بغل', 5) }),
+                    () => ({ title: 'عضلات پا', exercises: [...getEx('چهارسر ران', 3), ...getEx('پشت ران', 2)] }),
+                    () => ({ title: 'عضلات سرشانه', exercises: getEx('سرشانه', 4) }),
+                    () => ({ title: 'عضلات دست', exercises: [...getEx('جلو بازو', 3), ...getEx('پشت بازو', 3)] })
+                ];
+            }
+
+            // Generate Schedule based on Days Slider
+            // We rotate through the modules using modulo operator
+            for (let i = 0; i < days; i++) {
+                const moduleIndex = i % modules.length;
+                const sessionData = modules[moduleIndex]();
+                
+                schedule.push({
+                    day: `جلسه ${i + 1}`,
+                    title: sessionData.title,
+                    exercises: sessionData.exercises
+                });
+            }
+
+            // Render Results
+            renderResults(schedule);
+        }
+
+        function renderResults(schedule) {
+            // Update Tags
+            document.getElementById('result-tags').innerHTML = `
+                <span class="bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm text-slate-700">${preferences.level}</span>
+                <span class="bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-sm text-slate-700">${preferences.split}</span>
+                <span class="bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200 shadow-sm text-emerald-700">${preferences.days} روز در هفته</span>
+            `;
+
+            // Build Cards HTML
+            const container = document.getElementById('workout-container');
+            container.innerHTML = schedule.map((day, idx) => {
+                // Generate Exercises List
+                let exercisesHtml = '';
+                if(day.exercises.length > 0) {
+                    exercisesHtml = day.exercises.map((ex, i) => {
+                        const vol = (preferences.level === 'مبتدی' && ex.type === 'چند مفصلی') ? '۳ ست × ۸-۱۰ تکرار' : 
+                                    (preferences.level === 'مبتدی') ? '۲ ست × ۱۲-۱۵ تکرار' : 
+                                    (preferences.level === 'متوسط' && ex.type === 'چند مفصلی') ? '۴ ست × ۶-۸ تکرار' : 
+                                    (preferences.level === 'متوسط') ? '۳ ست × ۱۰-۱۲ تکرار' : 
+                                    (ex.type === 'چند مفصلی') ? '۵ ست × ۵ تکرار' : '۴ ست × ۸-۱۲ تکرار';
+                        
+                        const badgeColor = ex.type === 'چند مفصلی' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800';
+                        
+                        return `
+                        <div class="p-4 flex items-start gap-4 hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                            <div class="mt-1">
+                                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center pt-1 text-lg font-bold">
+                                    ${i + 1}
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <h5 class="text-lg text-slate-800 font-bold">${ex.name}</h5>
+                                    <span class="px-2 py-1 rounded text-xs font-bold ${badgeColor}">${ex.type}</span>
+                                </div>
+                                <p class="text-slate-500 mt-1 flex items-center gap-2 text-base">
+                                    <span class="text-slate-700 font-medium">${vol}</span>
+                                    <span class="text-slate-300">•</span>
+                                    <span>${ex.muscle}</span>
+                                </p>
+                            </div>
+                        </div>`;
+                    }).join('');
+                } else {
+                    exercisesHtml = `<div class="p-8 text-center text-slate-500 italic">هیچ تمرینی یافت نشد.</div>`;
+                }
+
+                // Return Card HTML
+                return `
+                <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden mb-6">
+                    <div class="bg-slate-50 p-4 flex items-center justify-between border-b border-slate-100">
+                        <div class="flex flex-col gap-1">
+                            <h4 class="text-base text-emerald-600 font-bold">${day.day}</h4>
+                            <h3 class="text-xl text-slate-800 font-bold">${day.title}</h3>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-slate-100">
+                        ${exercisesHtml}
+                    </div>
+                </div>`;
+            }).join('');
+            
+            lucide.createIcons(); // Refresh icons
+        }
+
+        // --- UTILS ---
+        function resetApp() {
+            document.getElementById('result-section').classList.add('hidden');
+            document.getElementById('input-section').classList.remove('hidden');
+            document.getElementById('workout-container').innerHTML = '';
+        }
+
+        function downloadImage() {
+            const element = document.getElementById('printable-area');
+            const btn = document.getElementById('download-btn');
+            
+            // UI Feedback
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader" class="animate-spin w-4 h-4 ml-1"></i> دانلود...`;
+            lucide.createIcons();
+            btn.disabled = true;
+
+            html2canvas(element, {
+                scale: 2,
+                backgroundColor: '#f1f5f9', // matches bg-slate-100
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Barname-Tamrini-${new Date().toISOString().slice(0,10)}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                // Reset UI
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                lucide.createIcons();
+            }).catch(err => {
+                console.error(err);
+                alert("خطا در دانلود");
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+                lucide.createIcons();
+            });
+        }
+
+        // Init
+        renderAllInputs();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
+
